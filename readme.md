@@ -8,16 +8,47 @@ This repo is to reimplement **S3D_G**, a powerful neural network for extracting 
 ![S3D_G and Sep-Inc](assets/1.jpg)
 
 ## Prerequisite
-- python3.6
-- Pytorch 1.0.
-- torchvison 0.2.2
-- tensorboardX
+- python3
+- Pytorch1.0
 
 ## Quickly Start
-Updating
+### Clone this repo
+
+```
+$ git clone https://github.com/BIGJUN777/s3d_g_pytorch.git   
+```
+
+### Install dependencies using pip
+```
+$ pip install -r requirements.txt
+```
+
+
+### Prepare dataset
+1. Download database: [UCF101](UCF101) or HMDB51.(**Now just ucf101 supported!**)
+2. Create the folder and put the database into by making symlinks(or you can put databases into directly)
+	```
+	$ mkdir dataset     		
+	$ ln -s .../UCF101/UCF-101 dataset/UCF-101
+	``` 
+3. Train the model. It will take some time to process the data in the first time running. Pay attention pls. Add `-h` to see more optional arguments.
+	```
+	$ python train.py
+	```
+4. Visualization: 
+	```
+	$ tensorboard --logdir=log
+	```
+### Inference/Demo
+```
+$ python inference.py --video path/to/a/video
+```
 
 ## Reference
 - [jfzhang95/pytorch-video-recognition](https://github.com/jfzhang95/pytorch-video-recognition)
 - [rimchang/kinetics-i3d-Pytorch](https://github.com/rimchang/kinetics-i3d-Pytorch)
 - [hassony2/kinetics_i3d_pytorch](https://github.com/hassony2/kinetics_i3d_pytorch)
+- [qijiezhao/s3d.pytorch](https://github.com/qijiezhao/s3d.pytorch)
+
 [s3d_g]: https://arxiv.org/abs/1712.04851
+[UCF101]: https://www.crcv.ucf.edu/data/UCF101.php

@@ -17,17 +17,17 @@ def main(args):
     # load checkpoint
     try:
         # initialize model with uploaded checkpoint
-        checkpoint = torch.load(args.pretrained)
-        model.load_state_dict(checkpoint['state_dict'])
-        # checkpoint = {
-        #           'clip_len': 16,
-        #           'resize_height': 256,
-        #           'resize_width': 256,
-        #           'crop_height': 224,
-        #           'crop_width': 224,  
-        #           'state_dict': model.state_dict()
-        # }
-        # model.load_state_dict(torch.load(args.pretrained))
+        # checkpoint = torch.load(args.pretrained)
+        # model.load_state_dict(checkpoint['state_dict'])
+        checkpoint = {
+                  'clip_len': 16,
+                  'resize_height': 256,
+                  'resize_width': 256,
+                  'crop_height': 224,
+                  'crop_width': 224,  
+                  'state_dict': model.state_dict()
+        }
+        model.load_state_dict(torch.load(args.pretrained))
         clip_len, resize_height, resize_width, crop_height, crop_width  = checkpoint['clip_len'], checkpoint['resize_height'], \
                                                         checkpoint['resize_width'], checkpoint['crop_height'], checkpoint['crop_width']
         print('Checkpoint loaded!')
@@ -50,6 +50,8 @@ def main(args):
     # referencing
     clip = []       # vector to keep the frames 
     while retaining:
+        if not capture.isOpened():
+            capture.open(args.video)
         retaining, frame = capture.read()
         if not retaining and frame is None:
             continue
@@ -69,9 +71,9 @@ def main(args):
             top_probs, top_class = outputs.topk(1, dim=1)
             # show the result on the images
             cv2.putText(frame, class_names[top_class].split(' ')[-1].strip(), (20,20),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,225), 1)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,225), 1)
             cv2.putText(frame, "prob: %.4f" % top_probs, (20,40),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,225), 1)  
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,225), 1)  
             # delete the first frame
             clip.pop(0)
         cv2.imshow('result', frame)
@@ -106,7 +108,7 @@ def str2bool(arg):
 if __name__ == "__main__":
     # set some arguments
     parser = argparse.ArgumentParser(description='inference of the model')
-    parser.add_argument('--video', type=str, default='/home/birl/ml_dl_projects/bigjun/conv3d/s3d_g_pytorch/dataset/UCF-101/ApplyEyeMakeup/v_ApplyEyeMakeup_g01_c01.avi',
+    parser.add_argument('--video', type=str, default='v_ApplyEyeMakeup_g01_c01.avi',
                         help='A path to the test video is necessary.')
     parser.add_argument('--dataset', '-d', type=str, default='ucf101', choices=['ucf101','hmdb51'],
                         help='Location of the dataset: ucf101')

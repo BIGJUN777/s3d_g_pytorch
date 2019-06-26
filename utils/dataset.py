@@ -115,13 +115,17 @@ class VideoDataset(Dataset):
         num = 0
         for num, video_class in enumerate(os.listdir(os.path.join(self.output_dir, 'train'))):
             for video in os.listdir(os.path.join(self.output_dir, 'train', video_class)):
-                video_name = os.path.join(os.path.join(self.output_dir, 'train', video_class, video),
-                             sorted(os.listdir(os.path.join(self.output_dir, 'train', video_class, video)))[0])
-                image = cv2.imread(video_name)
-                if np.shape(image)[0] != self.resize_height or np.shape(image)[1] != self.resize_width:
+                if len(os.listdir(os.path.join(self.output_dir, 'train', video_class, video))) == 0:
+                    print("No image in this file named %s. Please check!" % video)
                     return False
                 else:
-                    break
+                    video_name = os.path.join(os.path.join(self.output_dir, 'train', video_class, video),
+                                sorted(os.listdir(os.path.join(self.output_dir, 'train', video_class, video)))[0])
+                    image = cv2.imread(video_name)
+                    if np.shape(image)[0] != self.resize_height or np.shape(image)[1] != self.resize_width:
+                        return False
+                    else:
+                        break
             
         if dataset == "ucf101":
             if num == 100:
@@ -159,6 +163,7 @@ class VideoDataset(Dataset):
             if not os.path.exists(test_dir):
                 os.mkdir(test_dir)
             # processing video
+            # ipdb.set_trace()
             for video in train:
                 self._process_video(video, file, train_dir)
             for video in val:
@@ -175,7 +180,9 @@ class VideoDataset(Dataset):
             os.mkdir(os.path.join(save_dir, video_filename))
 
         # get some attributes of the video
-        capture = cv2.VideoCapture(os.path.join(self.root_dir, action_name, video))
+        # ipdb.set_trace()
+        video_path = os.path.join(self.root_dir, action_name, video)
+        capture = cv2.VideoCapture(video_path)
         frame_count = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
         frame_width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -285,16 +292,16 @@ class VideoDataset(Dataset):
 
 if __name__ == "__main__":
     import sys
+    sys.path.append("../")
     import ipdb
     from torch.utils.data import DataLoader
-    sys.path.append("..")
     # print(sys.path)
     trainset = VideoDataset(dataset='ucf101', split='train', clip_len=32)
     testset = VideoDataset(dataset='ucf101', split='test', clip_len= 32)
     test_loader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=1)
-    for i, (images, labels) in enumerate(test_loader):
-        print(images.shape)
-        print(labels)
+    # for i, (images, labels) in enumerate(test_loader):
+    #     print(images.shape)
+    #     print(labels)
     # buffer = testset._load_frames('/home/birl/ml_dl_projects/bigjun/conv3d/s3d_g_pytorch/dataset/ucf101/train/Archery/v_Archery_g05_c04')
     # buffer = testset._centercrop(buffer)
     # check the number of frames after capturing in each video

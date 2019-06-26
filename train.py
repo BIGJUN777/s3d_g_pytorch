@@ -71,7 +71,9 @@ parser.add_argument('--resize_width',  type=int, default=256,
 parser.add_argument('--crop_height',  type=int, default=224,
                     help='crop the height of frames when processing: 224')
 parser.add_argument('--crop_width',  type=int, default=224,
-                    help='crop the widht of frames when processing: 224')   
+                    help='crop the widht of frames when processing: 224') 
+parser.add_argument('--reprocess_data', type=str2bool, default='false',
+                    help='reporcess the data: false')  
 
 args = parser.parse_args() 
 
@@ -101,7 +103,7 @@ def run_model(args):
     # prepare dataset
     trainset = VideoDataset(dataset=args.dataset, split='train', clip_len=args.clip_len, 
                             resize_height=args.resize_height, resize_width=args.resize_width, 
-                            crop_height=args.crop_height, crop_width=args.crop_width)
+                            crop_height=args.crop_height, crop_width=args.crop_width, preprocess=args.reprocess_data)
     valset = VideoDataset(dataset=args.dataset, split='val', clip_len=args.clip_len,
                           resize_height=args.resize_height, resize_width=args.resize_width, 
                           crop_height=args.crop_height, crop_width=args.crop_width)

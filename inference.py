@@ -1,10 +1,13 @@
 from __future__ import print_function
 import sys
+import os
 import numpy as np
+import random
 import cv2
 import argparse
 import torch
 from model.s3d_g import S3D_G
+from utils.dataset import VideoDataset
 import ipdb
 
 def main(args):
@@ -13,21 +16,21 @@ def main(args):
         num_class = 101
     elif args.dataset == "hmdb51":
         num_class = 51
-    model = S3D_G(num_class=num_class)
+    model = S3D_G(num_class=num_class, gate=args.gate)
     # load checkpoint
     try:
         # initialize model with uploaded checkpoint
-        # checkpoint = torch.load(args.pretrained)
-        # model.load_state_dict(checkpoint['state_dict'])
-        checkpoint = {
-                  'clip_len': 16,
-                  'resize_height': 256,
-                  'resize_width': 256,
-                  'crop_height': 224,
-                  'crop_width': 224,  
-                  'state_dict': model.state_dict()
-        }
-        model.load_state_dict(torch.load(args.pretrained))
+        checkpoint = torch.load(args.pretrained, map_location='cuda:0')
+        model.load_state_dict(checkpoint['state_dict'])
+        # checkpoint = {
+        #           'clip_len': 16,
+        #           'resize_height': 256,
+        #           'resize_width': 256,
+        #           'crop_height': 224,
+        #           'crop_width': 224,  
+        #           'state_dict': model.state_dict()
+        # }
+        # model.load_state_dict(torch.load(args.pretrained))
         clip_len, resize_height, resize_width, crop_height, crop_width  = checkpoint['clip_len'], checkpoint['resize_height'], \
                                                         checkpoint['resize_width'], checkpoint['crop_height'], checkpoint['crop_width']
         print('Checkpoint loaded!')
@@ -44,9 +47,27 @@ def main(args):
     with open('./dataset/ucf_labels.txt', 'r') as f:
         class_names = f.readlines()
         f.close()
-    capture = cv2.VideoCapture(args.video)
+
+    # prepare for video
+    # ipdb.set_trace()
+    if (args.video is not None) and not (args.random_video):
+        capture = cv2.VideoCapture(args.video)
+    else:
+        testset = VideoDataset(dataset=args.dataset, split='test')
+        nums = np.arange(len(testset))
+        # random.shuffle(nums)
+        num = random.choice(nums)
+        video = os.path.join(testset.fnames[num].split("/")[0],'UCF-101', \
+                             testset.fnames[num].split("/")[3],           \
+                             testset.fnames[num].split("/")[4]+'.avi')
+        capture = cv2.VideoCapture(video)
+        print("Testing on video named {}.avi".format(testset.fnames[num].split("/")[4]))
     retaining = True
 
+    # set up video writer
+    fps_video = capture.get(cv2.CAP_PROP_FPS)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    videoWriter = cv2.VideoWriter('result.mp4', fourcc, fps_video, (240, 240))
     # referencing
     clip = []       # vector to keep the frames 
     while retaining:
@@ -76,8 +97,9 @@ def main(args):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0,0,225), 1)  
             # delete the first frame
             clip.pop(0)
+            videoWriter.write(frame)
         cv2.imshow('result', frame)
-        cv2.waitKey(30)
+        cv2.waitKey(10)
 
     capture.release()
     cv2.destroyAllWindows()         
@@ -108,14 +130,18 @@ def str2bool(arg):
 if __name__ == "__main__":
     # set some arguments
     parser = argparse.ArgumentParser(description='inference of the model')
-    parser.add_argument('--video', type=str, default='v_ApplyEyeMakeup_g01_c01.avi',
+    parser.add_argument('--gate', type=str2bool, default='false', required=True,
+                        help='S3D_G(true) or S3D(false): false')
+    parser.add_argument('--video', type=str, default='./dataset/UCF-101/ApplyEyeMakeup/v_ApplyEyeMakeup_g01_c01.avi',
                         help='A path to the test video is necessary.')
     parser.add_argument('--dataset', '-d', type=str, default='ucf101', choices=['ucf101','hmdb51'],
                         help='Location of the dataset: ucf101')
-    parser.add_argument('--pretrained', '-p', type=str, default='./checkpoints/checkpoint_100_epoch.pth',
-                        help='Location of the checkpoint file: ./checkpoints/checkpoint_100_epoch.pth')
+    parser.add_argument('--pretrained', '-p', type=str, default='./checkpoints/ucf101_checkpoint_100_epoch.pth',
+                        help='Location of the checkpoint file: ./checkpoints/ucf101_checkpoint_100_epoch.pth')
     parser.add_argument('--gpu', type=str2bool, default='true',
                         help='use GPU or not: true')
+    parser.add_argument('--random_video', type=str2bool, default='false',
+                        help='select video randomly from the test dataset: false')
     args = parser.parse_args()
     # inferencing
     main(args)

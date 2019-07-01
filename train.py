@@ -87,7 +87,7 @@ def run_model(args):
     elif args.dataset == "hmdb51":
         num_class = 51
     # train from scratch if args.pretrained==None
-    model = S3D_G(num_class=num_class, drop_prob=args.drop_prob)
+    model = S3D_G(num_class=num_class, drop_prob=args.drop_prob, gate=True)
     resume_epoch = 0    
     if args.pretrained:
         # initialize model with uploaded checkpoint

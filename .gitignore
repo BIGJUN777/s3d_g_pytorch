@@ -1,5 +1,6 @@
-/checkpoints/*
-/dataset/*
-/log/
+checkpoints/*
+dataset/*
+log/
 
 *.pyc
+*.mp4
